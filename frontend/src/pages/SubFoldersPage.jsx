@@ -402,7 +402,7 @@ const SubFoldersPage = () => {
 
                 <div>
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                    {folderChain.length === 1 ? "Sub Folders" : "Documents"}
+                    {projectName}
 
                     {subfolders.length > 0 && (
                       <span className="text-sm font-normal px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100">
@@ -413,9 +413,15 @@ const SubFoldersPage = () => {
 
                   <p className="mt-1 text-sm text-gray-600 flex items-center gap-2">
                     <Eye className="w-4 h-4" />
-                    {folderChain[folderChain.length - 1]?.name
-                      ? `Browse content inside "${folderChain[folderChain.length - 1].name}"`
-                      : "Browse sub folders"}
+
+                    <span className="font-medium text-gray-700">
+                      {folderChain[folderChain.length - 1]?.name ||
+                        "Root Folder"}
+                    </span>
+
+                    <span className="text-gray-400">•</span>
+
+                    <span>Browse and manage contents</span>
                   </p>
                 </div>
               </div>
