@@ -206,28 +206,28 @@ const formatCellValue = (value, rowIndex, colIndex) => {
 
   // Handle Date objects from XLSX (cellDates: true)
   if (value instanceof Date && !isNaN(value)) {
-    console.log(`📅 Date detected at row ${rowIndex}, col ${colIndex}:`, {
-      rawValue: value,
-      toString: value.toString(),
-      toISOString: value.toISOString(),
-      getDate: value.getDate(),
-      getUTCDate: value.getUTCDate(),
-      getMonth: value.getMonth(),
-      getUTCMonth: value.getUTCMonth(),
-      getFullYear: value.getFullYear(),
-      getUTCFullYear: value.getUTCFullYear(),
-      getTimezoneOffset: value.getTimezoneOffset(),
-    });
+    // console.log(`📅 Date detected at row ${rowIndex}, col ${colIndex}:`, {
+    //   rawValue: value,
+    //   toString: value.toString(),
+    //   toISOString: value.toISOString(),
+    //   getDate: value.getDate(),
+    //   getUTCDate: value.getUTCDate(),
+    //   getMonth: value.getMonth(),
+    //   getUTCMonth: value.getUTCMonth(),
+    //   getFullYear: value.getFullYear(),
+    //   getUTCFullYear: value.getUTCFullYear(),
+    //   getTimezoneOffset: value.getTimezoneOffset(),
+    // });
 
     // CRITICAL FIX: XLSX.js creates dates near midnight but not exactly at midnight
     // (e.g., 23:59:50 in local time). When converted to UTC, this can shift to the previous day.
     // Solution: Add 12 hours to ensure we're solidly in the middle of the correct day in UTC
     const adjustedDate = new Date(value.getTime() + 12 * 60 * 60 * 1000);
 
-    console.log(`   🔧 Adjusted date:`, {
-      original: value.toISOString(),
-      adjusted: adjustedDate.toISOString(),
-    });
+    // console.log(`   🔧 Adjusted date:`, {
+    //   original: value.toISOString(),
+    //   adjusted: adjustedDate.toISOString(),
+    // });
 
     // Now extract UTC components from the adjusted date
     const day = adjustedDate.getUTCDate();
@@ -251,7 +251,7 @@ const formatCellValue = (value, rowIndex, colIndex) => {
     const monthStr = monthNames[month];
 
     const formatted = `${dayStr}-${monthStr}`;
-    console.log(`   ✅ Formatted as: ${formatted}`);
+    // console.log(`   ✅ Formatted as: ${formatted}`);
 
     return formatted;
   }
@@ -260,13 +260,13 @@ const formatCellValue = (value, rowIndex, colIndex) => {
   if (typeof value === "number") {
     // Check if it's likely a date (Excel dates are typically 40000-60000)
     if (value > 40000 && value < 60000) {
-      console.log(
-        `🔢 Number (possible date) at row ${rowIndex}, col ${colIndex}:`,
-        value,
-      );
+      // console.log(
+      //   `🔢 Number (possible date) at row ${rowIndex}, col ${colIndex}:`,
+      //   value,
+      // );
       try {
         const parsed = XLSX.SSF.parse_date_code(value);
-        console.log(`   Parsed:`, parsed);
+        // console.log(`   Parsed:`, parsed);
         if (parsed && parsed.d && parsed.m && parsed.y) {
           const day = String(parsed.d).padStart(2, "0");
           const monthNames = [
@@ -285,7 +285,7 @@ const formatCellValue = (value, rowIndex, colIndex) => {
           ];
           const month = monthNames[parsed.m - 1];
           const formatted = `${day}-${month}`;
-          console.log(`   ✅ Formatted as: ${formatted}`);
+          // console.log(`   ✅ Formatted as: ${formatted}`);
           return formatted;
         }
       } catch (e) {
@@ -314,13 +314,13 @@ const ExcelPreview = ({ fileUrl }) => {
   useEffect(() => {
     const load = async () => {
       try {
-        console.log("🔍 Starting Excel file load...");
-        console.log("📂 File URL:", fileUrl);
+        // console.log("🔍 Starting Excel file load...");
+        // console.log("📂 File URL:", fileUrl);
 
         // ---------- CHECK FILE SIZE FIRST ----------
         const head = await fetch(fileUrl, { method: "HEAD" });
         const size = parseInt(head.headers.get("Content-Length") || "0");
-        console.log("📏 File size:", size, "bytes");
+        // console.log("📏 File size:", size, "bytes");
 
         if (size > MAX_FILE_SIZE) {
           console.log("❌ File too large");
@@ -329,19 +329,19 @@ const ExcelPreview = ({ fileUrl }) => {
         }
 
         // ---------- FETCH FILE ----------
-        console.log("⬇️ Fetching file...");
+        // console.log("⬇️ Fetching file...");
         const res = await fetch(fileUrl);
         const buffer = await res.arrayBuffer();
-        console.log("✅ File fetched, buffer size:", buffer.byteLength);
+        // console.log("✅ File fetched, buffer size:", buffer.byteLength);
 
         // ---------- READ WORKBOOK ----------
-        console.log("📖 Reading workbook with cellDates: true...");
+        // console.log("📖 Reading workbook with cellDates: true...");
         const wb = XLSX.read(buffer, {
           dense: true,
           cellDates: true, // Convert Excel dates to JS Date objects
         });
-        console.log("✅ Workbook loaded");
-        console.log("📊 Sheet names:", wb.SheetNames);
+        // console.log("✅ Workbook loaded");
+        // console.log("📊 Sheet names:", wb.SheetNames);
 
         // ---------- SHEET LIMIT ----------
         if (wb.SheetNames.length > MAX_SHEETS) {
@@ -351,7 +351,7 @@ const ExcelPreview = ({ fileUrl }) => {
         }
 
         const sheet = wb.Sheets[wb.SheetNames[0]];
-        console.log("📄 Using first sheet:", wb.SheetNames[0]);
+        // console.log("📄 Using first sheet:", wb.SheetNames[0]);
 
         // ---------- ROW COUNT CHECK (FAST) ----------
         if (!sheet["!ref"]) {
@@ -362,7 +362,7 @@ const ExcelPreview = ({ fileUrl }) => {
 
         const range = XLSX.utils.decode_range(sheet["!ref"]);
         const rowCount = range.e.r + 1;
-        console.log("📏 Row count:", rowCount);
+        // console.log("📏 Row count:", rowCount);
 
         if (rowCount > MAX_ROWS) {
           console.log("❌ Too many rows");
@@ -371,17 +371,17 @@ const ExcelPreview = ({ fileUrl }) => {
         }
 
         // ---------- SAFE PARSE ----------
-        console.log("🔄 Converting sheet to JSON array...");
+        // console.log("🔄 Converting sheet to JSON array...");
         const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        console.log("✅ Conversion complete");
-        console.log("📊 Data rows:", data.length);
-        console.log("📊 First 3 rows:", data.slice(0, 3));
+        // console.log("✅ Conversion complete");
+        // console.log("📊 Data rows:", data.length);
+        // console.log("📊 First 3 rows:", data.slice(0, 3));
 
         // Log some date cells specifically
-        console.log("\n🔍 Checking date values in column 12 (Final Date):");
+        // console.log("\n🔍 Checking date values in column 12 (Final Date):");
         for (let i = 0; i < Math.min(20, data.length); i++) {
           if (data[i] && data[i][12]) {
-            console.log(`Row ${i}:`, typeof data[i][12], data[i][12]);
+            // console.log(`Row ${i}:`, typeof data[i][12], data[i][12]);
           }
         }
 
@@ -460,13 +460,13 @@ const ExcelPreview = ({ fileUrl }) => {
   // Get max columns
   const maxCols = Math.max(...rows.map((row) => row.length));
 
-  console.log(
-    "🎨 Rendering table with",
-    rows.length,
-    "rows and",
-    maxCols,
-    "columns",
-  );
+  // console.log(
+  //   "🎨 Rendering table with",
+  //   rows.length,
+  //   "rows and",
+  //   maxCols,
+  //   "columns",
+  // );
 
   // ---------- EXCEL-LIKE TABLE ----------
   return (

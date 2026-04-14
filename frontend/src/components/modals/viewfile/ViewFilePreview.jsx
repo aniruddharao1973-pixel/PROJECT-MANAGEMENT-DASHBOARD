@@ -79,6 +79,7 @@ const ViewFilePreview = ({
 
   /* ========================= STATE ========================= */
   const [textContent, setTextContent] = useState("");
+  const [loading, setLoading] = useState(true);
   const [oldText, setOldText] = useState("");
   const [savingTxt, setSavingTxt] = useState(false);
   const [placingSignature, setPlacingSignature] = useState(false);
@@ -112,6 +113,7 @@ const ViewFilePreview = ({
         .then((txt) => {
           setTextContent(txt);
           setOldText(txt);
+          setLoading(false);
         })
         .catch(() => setTextContent("⚠ Failed to load text file"));
     }
@@ -254,7 +256,10 @@ const ViewFilePreview = ({
 
   /* ========================= PDF.JS MULTI PAGE RENDER ========================= */
   useEffect(() => {
-    if (!isPdf) return;
+    if (!isPdf) {
+      setLoading(false);
+      return;
+    }
 
     if (hasRenderedRef.current) return; // ✅ prevents double render
     hasRenderedRef.current = true;
@@ -266,8 +271,9 @@ const ViewFilePreview = ({
     const abortController = new AbortController();
 
     const startRender = async () => {
+      setLoading(true);
       if (cancelled) return;
-      console.log("PDF RENDER: startRender()", { fileUrl });
+      // console.log("PDF RENDER: startRender()", { fileUrl });
 
       try {
         pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -360,11 +366,11 @@ const ViewFilePreview = ({
 
           renderTasks.push(renderTask);
 
-          console.log("PDF RENDER: queued page", {
-            pageNum,
-            viewportWidth: viewport.width,
-            viewportHeight: viewport.height,
-          });
+          // console.log("PDF RENDER: queued page", {
+          //   pageNum,
+          //   viewportWidth: viewport.width,
+          //   viewportHeight: viewport.height,
+          // });
         }
 
         await Promise.all(renderTasks);
@@ -418,9 +424,10 @@ const ViewFilePreview = ({
         }, 300);
 
         if (cancelled) return;
-        console.log("===== ALL PAGES RENDERED =====", {
-          totalPages: pdf.numPages,
-        });
+        // console.log("===== ALL PAGES RENDERED =====", {
+        //   totalPages: pdf.numPages,
+        // });
+        setLoading(false);
       } catch (err) {
         if (cancelled) {
           console.log("PDF RENDER: cancelled", err);
@@ -433,6 +440,7 @@ const ViewFilePreview = ({
         }
 
         console.error("PDF RENDER ERROR:", err);
+        setLoading(false);
         pushToast(
           `Unable to render PDF preview: ${err?.message || "unknown error"}`,
           "error",
@@ -516,9 +524,9 @@ const ViewFilePreview = ({
   }, [signatures.length]);
 
   useEffect(() => {
-    if (isPdf) {
-      console.log("PDF URL:", fileUrl);
-    }
+    // if (isPdf) {
+    //   console.log("PDF URL:", fileUrl);
+    // }
   }, [file?.id]);
 
   useEffect(() => {
@@ -779,6 +787,12 @@ const ViewFilePreview = ({
     };
   }, [fileUrl, isMobile]);
 
+  useEffect(() => {
+    if (isCsv || isExcel || isImage) {
+      setLoading(false);
+    }
+  }, [fileUrl]);
+
   const togglePlay = () => {
     const v = videoRef.current;
     if (!v) return;
@@ -870,6 +884,34 @@ const ViewFilePreview = ({
 
   return (
     <div className="relative flex-1 min-w-0 min-h-0 p-3 sm:p-4 md:p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 rounded-t-none sm:rounded-t-xl md:rounded-l-xl overflow-hidden h-full">
+      {/* ===== GLOBAL LOADER ===== */}
+      {loading && (
+        <div className="absolute inset-0 z-[12000] flex items-center justify-center">
+          {/* Blur Background */}
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-xl" />
+
+          {/* Loader Card */}
+          <div
+            className="relative flex flex-col items-center gap-4 px-6 py-5 rounded-2xl 
+          bg-white/80 backdrop-blur-xl shadow-2xl border border-slate-200/50"
+          >
+            {/* Spinner */}
+            <div className="relative">
+              <div className="w-14 h-14 rounded-full border-4 border-blue-200" />
+              <div className="absolute inset-0 w-14 h-14 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+            </div>
+
+            {/* Text */}
+            <div className="text-sm font-semibold text-slate-700">
+              Loading Preview...
+            </div>
+
+            <div className="text-xs text-slate-500">
+              Rendering file, please wait
+            </div>
+          </div>
+        </div>
+      )}
       {/* ===== MODERN HEADER WITH GRADIENT ===== */}
       <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
         <div className="flex items-center gap-3">
@@ -1156,6 +1198,7 @@ const ViewFilePreview = ({
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl opacity-25 group-hover:opacity-40 blur transition duration-300"></div>
             <img
               src={fileUrl}
+              onLoad={() => setLoading(false)}
               alt="Preview"
               className="relative max-h-full max-w-full rounded-2xl shadow-2xl object-contain"
             />

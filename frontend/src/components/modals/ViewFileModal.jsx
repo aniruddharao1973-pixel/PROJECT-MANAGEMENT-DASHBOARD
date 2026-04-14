@@ -340,7 +340,7 @@ const ViewFileModal = ({ file, projectId, folderId, onClose }) => {
               <div className="border-b border-slate-200/50 p-4 bg-white/50 backdrop-blur-sm">
                 <button
                   onClick={(e) => {
-                    console.log("🔐 Signature Access onClick (desktop)", e);
+                    // console.log("🔐 Signature Access onClick (desktop)", e);
                     setShowSignatureAccess(true);
                   }}
                   onTouchEnd={(e) => {
@@ -542,7 +542,7 @@ const ViewFileModal = ({ file, projectId, folderId, onClose }) => {
             {/* ===== CLOSE BUTTON (FLOATING) ===== */}
             <button
               onClick={(e) => {
-                console.log("❌ CLOSE onClick FIRED (desktop)", e);
+                // console.log("❌ CLOSE onClick FIRED (desktop)", e);
                 onClose();
               }}
               onTouchEnd={(e) => {
